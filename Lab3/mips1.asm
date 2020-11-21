@@ -24,12 +24,12 @@ main:
 	move $s0, $v0    #Se guarda el desriptor del archivo a $s0
 
 #Apertura del archivo sobre el que se escribira
-	li $v0, 13
-	la $a0, file_out 
-	li $a1, 1
-	li $a2, 0
-	syscall
-	move $s1, $v0
+	li $v0, 13 	#Codigo que syscall reconoce para abrir archivos desde una ruta
+	la $a0, file_out #Se inserta la ruta del archivo a escribir
+	li $a1, 1	# el codigo "1" llevado a $a1 indica que el archivo será escrito
+	li $a2, 0	#Este parametro mode se ignora para este syscall
+	syscall		#El archivo es creado
+	move $s1, $v0	#Se guarda el desriptor del archivo a $s1
 	
 #Leer el archivo que fue abierto para su lectura
 
@@ -41,7 +41,7 @@ main:
 	
 #Imprimir el contenido del archivo
 
-	li $v0, 4	#4 enviado a $v0 es para imprimnir un string
+	li $v0, 4	#4 enviado a $v0 es para imprimir un string
 	la $a0, buffer  #En el buffer enviado antes como parametro quedo guardado en contenido del archivo
 	syscall		#Imprime en consola
 	
@@ -61,7 +61,7 @@ userInputData:
 	li $v0, 8	     #Lee la entrada del usuario string
 	syscall
 	
-	#Imprime lo que ingreso el usuario(Par probar que si se guardo)
+	#Imprime lo que ingreso el usuario(Para probar que si se guardo)
 	move $a0, $a2
 	li $v0, 4
 	syscall
@@ -70,14 +70,17 @@ userInputData:
 	
 	la $t0, strBuffer 	#Posicion de memoria del primer caracter en la cadena ingresada
 	la $t1, buffer 	  	#Posicion de memoria del primer caracter en el texto 
+	la $t6, strBuffer	#Posicion de memoria del primer caracter en la cadena ingresada, este será el auxiliar para el 'previo'
 	la $t4 0 	        #Inicializa el contador, 
 	
 iterateTxt: 
 	lbu $t2, 0($t1) 	#Caracter del texto en posicion $t1
 	beq $t2, $zero, writeString	#Se sale del ciclo y va a escribir el nro de apariciones, si llega al final del archivo, osea un caracter null que en ascii es igual 00000000
 	lbu $t3, 0($t0) 	#Caracter del string ingresado en posicion $t0
+	lbu $t7, 0($t6)		#Caracter del string ingresado en posicion $t6 'previo'
 	
 	bne $t2, $t3, noEqual   #Si un caracter en el string es distinto al caracter en el archivo txt
+		move $t6, $t0   #Le llevamos a nuestro 'previo' lo que tenía t0
 		addi $t0, $t0, 1 #Este es el if en alto nivel, si son iguales los caracteres, ambos apuntadores son aumentados para pasar al siguiente
 		addi $t1, $t1, 1
 		lbu $t3, 0($t0)  #Carga en $t3 el caracter del string despues de haber avanzado(Aumentado el apuntador $t0)
@@ -85,12 +88,16 @@ iterateTxt:
 			addi $t4, $t4, 1      #Cada vez que se termine un string aumenta para contar una aparicion, asociado al registro $t4
 			la $t0, strBuffer     #Reinicia el apuntador del string a la primera posicion
 		j iterateTxt		      
-noEqual: 			 #Si los caracteres del string y el texto no son iguales	
+noEqual: 			 #Si los caracteres del string y el texto no son iguales
+	beq  $t2, $t7, prevEqual #Si el caracter que estamos evaluando es igual al caracter anterior del string
 	addi $t1, $t1, 1	 #va a mover el apuntador del texto para seguir leyendo
 	la $t0, strBuffer	 #Reiniciara el apuntador del string para que apunte a la primera posicion
 	j iterateTxt		 #Seguira buscando alguna repeticion del string en el texto
 
-
+prevEqual:
+	addi $t1, $t1, 1	 #va a mover el apuntador del texto para seguir leyendo
+	j iterateTxt		 #Seguira buscando alguna repeticion del string en el texto
+	
 writeString:
 	addiu $t5, $t5, 1	# $t5 ser el registro contador para saber cuantos string hemos analizado
 		
