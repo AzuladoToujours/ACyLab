@@ -1,10 +1,10 @@
 .data
 file_in: .asciiz "source.txt"
 file_out: .asciiz "output.txt"
-buffer: .space 4000
-strBuffer: .space 64
+buffer: .space 500000
+strBuffer: .space 256
 str: 	.space 2000
-msg:  .asciiz "Ingrese un string para buscar coincidencias: "
+msg:  .asciiz "\n Ingrese un string para buscar coincidencias: "
 str1: .asciiz "Nro de veces primer string es:  "
 str2: .asciiz "\nNro de veces segundo string es:  \n"
 str3: .asciiz "\nNro de veces tercer string es:  \n"
